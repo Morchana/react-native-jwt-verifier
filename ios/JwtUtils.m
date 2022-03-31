@@ -47,18 +47,30 @@ RCT_EXPORT_METHOD(verify: (NSString*)token
     NSString* encodedMessage = [NSString stringWithFormat:@"%@.%@", parts[0], parts[1]];
     
     NSMutableData* hashedMessage = [self sha256:encodedMessage];
+    if ([hashedMessage length] > 32) {
+        reject(@"JsonWebTokenError", @"jwt malformed", nil);
+        return;
+    }
     memcpy(&message, [hashedMessage bytes], [hashedMessage length]);
     
     // Build Public Key
     NSData *xKeyData = [self base64Decode: x];
     NSData *yKeyData = [self base64Decode: y];
     
+    if ([xKeyData length] > 32 || [yKeyData length] > 32) {
+        reject(@"JsonWebTokenError", @"jwt malformed", nil);
+        return;
+    }
     publicKeyFull[0] = 4;
     memcpy(publicKeyFull + 1, [xKeyData bytes], [xKeyData length]);
     memcpy(publicKeyFull + 33, [yKeyData bytes], [yKeyData length]);
 
     // Build Signature
     NSData *signatureData = [self base64Decode: parts[2]];
+    if ([signatureData length] > 64) {
+        reject(@"JsonWebTokenError", @"jwt malformed", nil);
+        return;
+    }
     memcpy(signatureFull, [signatureData bytes], [signatureData length]);
 
     // Create verifier context
