@@ -47,7 +47,7 @@ RCT_EXPORT_METHOD(verify: (NSString*)token
     NSString* encodedMessage = [NSString stringWithFormat:@"%@.%@", parts[0], parts[1]];
     
     NSMutableData* hashedMessage = [self sha256:encodedMessage];
-    if ([hashedMessage length] > [message length]) {
+    if ([hashedMessage length] > 32) {
         reject(@"JsonWebTokenError", @"jwt malformed", nil);
         return;
     }
@@ -67,7 +67,7 @@ RCT_EXPORT_METHOD(verify: (NSString*)token
 
     // Build Signature
     NSData *signatureData = [self base64Decode: parts[2]];
-    if ([signatureData length] > [signatureFull length]) {
+    if ([signatureData length] > 64) {
         reject(@"JsonWebTokenError", @"jwt malformed", nil);
         return;
     }
